@@ -337,22 +337,36 @@ Prefs.prototype = {
 		this.valueDisplayFavorites.connect('notify::active', Lang.bind(this, this.changeDisplayFavorites));
 		this.gridComponents.attach(this.valueDisplayFavorites, 3, 5, 2, 1);
 
+		let labelDisplayStatusArea = new Gtk.Label({
+			label: _("StatusArea"),
+			xalign: 0
+		});
+		this.gridComponents.attach(labelDisplayStatusArea, 1, 6, 1, 1);
+		this.valueDisplayStatusArea = new Gtk.Switch({
+			active: this.settings.get_boolean("display-statusarea")
+		});
+		this.valueDisplayStatusArea.set_halign(Gtk.Align.END);
+		this.valueDisplayStatusArea.connect('notify::active', Lang.bind(this, this.changeDisplayStatusArea));
+		this.gridComponents.attach(this.valueDisplayStatusArea, 3, 6, 2, 1);
+
 		let valueAppearanceBox = new Gtk.Box();
 		let labelAppearanceBox = new Gtk.Label({
 			label: _("Align") + ' ',
 			xalign: 0
 		});
+
 		this.valueAppearance = new Gtk.ComboBoxText();
 		this.valueAppearance.append_text(_("Tasks"));
 		this.valueAppearance.append_text(_("Desktop Button"));
 		this.valueAppearance.append_text(_("Workspace Button"));
 		this.valueAppearance.append_text(_("Appview Button"));
 		this.valueAppearance.append_text(_("Favorites"));
+		this.valueAppearance.append_text(_("StatusArea"));
 		this.valueAppearance.set_active(this.settings.get_enum("appearance-selection"));
 		this.valueAppearance.connect('changed', Lang.bind(this, this.changeAppearanceSelection));
 		valueAppearanceBox.add(labelAppearanceBox);
 		valueAppearanceBox.add(this.valueAppearance);
-		this.gridComponents.attach(valueAppearanceBox, 1, 6, 1, 1);
+		this.gridComponents.attach(valueAppearanceBox, 1, 7, 1, 1);
 		let valueAppearanceName = new Gtk.Button({
 			label: "<"
 		});
@@ -369,32 +383,32 @@ Prefs.prototype = {
 		value2AppearanceName.connect('leave-notify-event', Lang.bind(this, function() {
 			this.settings.set_int("hover-event", 0);
 		}));
-		this.gridComponents.attach(valueAppearanceName, 3, 6, 1, 1);
-		this.gridComponents.attach(value2AppearanceName, 4, 6, 1, 1);
+		this.gridComponents.attach(valueAppearanceName, 3, 7, 1, 1);
+		this.gridComponents.attach(value2AppearanceName, 4, 7, 1, 1);
 
 		let labelTopPanel = new Gtk.Label({
 			label: _("Top Panel"),
 			xalign: 0
 		});
-		this.gridComponents.attach(labelTopPanel, 1, 7, 1, 1);
+		this.gridComponents.attach(labelTopPanel, 1, 8, 1, 1);
 		this.valueTopPanel = new Gtk.Switch({
 			active: this.settings.get_boolean("top-panel")
 		});
 		this.valueTopPanel.set_halign(Gtk.Align.END);
 		this.valueTopPanel.connect('notify::active', Lang.bind(this, this.changeTopPanel));
-		this.gridComponents.attach(this.valueTopPanel, 3, 7, 2, 1);
+		this.gridComponents.attach(this.valueTopPanel, 3, 8, 2, 1);
 
 		let labelBottomPanel = new Gtk.Label({
 			label: _("Bottom Panel"),
 			xalign: 0
 		});
-		this.gridComponents.attach(labelBottomPanel, 1, 8, 1, 1);
+		this.gridComponents.attach(labelBottomPanel, 1, 9, 1, 1);
 		this.valueBottomPanel = new Gtk.Switch({
 			active: this.settings.get_boolean("bottom-panel")
 		});
 		this.valueBottomPanel.set_halign(Gtk.Align.END);
 		this.valueBottomPanel.connect('notify::active', Lang.bind(this, this.changeBottomPanel));
-		this.gridComponents.attach(this.valueBottomPanel, 3, 8, 2, 1);
+		this.gridComponents.attach(this.valueBottomPanel, 3, 9, 2, 1);
 
 		let resetComponentsButton = new Gtk.Button({
 			label: _("Reset Overview Tab")
@@ -406,20 +420,20 @@ Prefs.prototype = {
 		}));
 		resetComponentsButton.connect('clicked', Lang.bind(this, this.resetComponents));
 		resetComponentsButton.set_tooltip_text(_("Reset the Overview Tab to the Original Overview Settings"));
-		this.gridComponents.attach(resetComponentsButton, 1, 10, 1, 1);
+		this.gridComponents.attach(resetComponentsButton, 1, 11, 1, 1);
 
 
 		let labelSpaceComponents1 = new Gtk.Label({
 			label: "\t",
 			xalign: 0
 		});
-		this.gridComponents.attach(labelSpaceComponents1, 0, 11, 1, 1);
+		this.gridComponents.attach(labelSpaceComponents1, 0, 12, 1, 1);
 		let labelSpaceComponents2 = new Gtk.Label({
 			label: "\t",
 			xalign: 0,
 			hexpand: true
 		});
-		this.gridComponents.attach(labelSpaceComponents2, 2, 9, 1, 1);
+		this.gridComponents.attach(labelSpaceComponents2, 2, 10, 1, 1);
 		let labelSpaceComponents3 = new Gtk.Label({
 			label: "<b>" + _("Overview") + "</b>",
 			hexpand: true
@@ -1801,6 +1815,36 @@ Prefs.prototype = {
 		value2SeparatorRightFavorites.connect("value-changed", Lang.bind(this, this.changeSeparatorRightFavorites));
 		this.gridSeparator.attach(value2SeparatorRightFavorites, 6, 7, 2, 1);
 
+		let labelSeparatorStatusArea = new Gtk.Label({
+			label: _("StatusArea"),
+			xalign: 0
+		});
+		this.gridSeparator.attach(labelSeparatorStatusArea, 1, 8, 1, 1);
+		this.valueSeparatorLeftStatusArea = new Gtk.Adjustment({
+			lower: 0,
+			upper: 1000,
+			step_increment: 1
+		});
+		let value2SeparatorLeftStatusArea = new Gtk.SpinButton({
+			adjustment: this.valueSeparatorLeftStatusArea,
+			snap_to_ticks: true
+		});
+		value2SeparatorLeftStatusArea.set_value(this.settings.get_int("separator-left-statusarea"));
+		value2SeparatorLeftStatusArea.connect("value-changed", Lang.bind(this, this.changeSeparatorLeftStatusArea));
+		this.gridSeparator.attach(value2SeparatorLeftStatusArea, 3, 8, 2, 1);
+		this.valueSeparatorRightStatusArea = new Gtk.Adjustment({
+			lower: 0,
+			upper: 1000,
+			step_increment: 1
+		});
+		let value2SeparatorRightStatusArea = new Gtk.SpinButton({
+			adjustment: this.valueSeparatorRightStatusArea,
+			snap_to_ticks: true
+		});
+		value2SeparatorRightFavorites.set_value(this.settings.get_int("separator-right-statusarea"));
+		value2SeparatorRightStatusArea.connect("value-changed", Lang.bind(this, this.changeSeparatorRightStatusArea));
+		this.gridSeparator.attach(value2SeparatorRightStatusArea, 6, 8, 2, 1);
+
 		let resetSeparatorButton = new Gtk.Button({
 			label: _("Reset Separators Tab")
 		});
@@ -1811,13 +1855,13 @@ Prefs.prototype = {
 		}));
 		resetSeparatorButton.connect('clicked', Lang.bind(this, this.resetSeparators));
 		resetSeparatorButton.set_tooltip_text(_("Reset the Separators Tab to the Original Separators Settings"));
-		this.gridSeparator.attach(resetSeparatorButton, 1, 9, 1, 1);
+		this.gridSeparator.attach(resetSeparatorButton, 1, 10, 1, 1);
 
 		let labelSpaceSeparator1 = new Gtk.Label({
 			label: "\t",
 			xalign: 0
 		});
-		this.gridSeparator.attach(labelSpaceSeparator1, 0, 10, 1, 1);
+		this.gridSeparator.attach(labelSpaceSeparator1, 0, 11, 1, 1);
 		let labelSpaceSeparator2 = new Gtk.Label({
 			label: "\t",
 			xalign: 0,
@@ -1833,7 +1877,7 @@ Prefs.prototype = {
 			label: "\t",
 			xalign: 0
 		});
-		this.gridSeparator.attach(labelSpaceSeparator4, 5, 8, 1, 1);
+		this.gridSeparator.attach(labelSpaceSeparator4, 5, 9, 1, 1);
 		let labelSpaceSeparator5 = new Gtk.Label({
 			label: "\t",
 			xalign: 0
@@ -2444,6 +2488,10 @@ Prefs.prototype = {
 		this.settings.set_boolean("display-favorites", object.active);
 	},
 
+	changeDisplayStatusArea: function(object, pspec) {
+		this.settings.set_boolean("display-statusarea", object.active);
+	},
+
 	changeAppearanceSelection: function(object) {
 		this.settings.set_enum("appearance-selection", this.valueAppearance.get_active());
 	},
@@ -3052,6 +3100,14 @@ Prefs.prototype = {
 		this.settings.set_int("separator-right-favorites", this.valueSeparatorRightFavorites.get_value());
 	},
 
+	changeSeparatorLeftStatusArea: function(object) {
+		this.settings.set_int("separator-left-statusarea", this.valueSeparatorLeftStatusArea.get_value());
+	},
+
+	changeSeparatorRightStatusArea: function(object) {
+		this.settings.set_int("separator-right-statusarea", this.valueSeparatorRightStatusArea.get_value());
+	},
+
 	changeDisplayActivitiesButton: function(object, pspec) {
 		this.settings.set_boolean("activities-button", object.active);
 	},
@@ -3207,6 +3263,11 @@ Prefs.prototype = {
 				return;
 			this.appearanceName = "position-favorites";
 		}
+		if (this.appearanceSelection === 5) {
+			if (!this.settings.get_boolean("display-statusarea"))
+				return;
+			this.appearanceName = "position-statusarea";
+		}
 		this.oldValueAppearance = this.settings.get_int(this.appearanceName);
 		if (this.oldValueAppearance === 0)
 			return;
@@ -3242,8 +3303,13 @@ Prefs.prototype = {
 				return;
 			this.appearanceName = "position-favorites";
 		}
+		if (this.appearanceSelection === 4) {
+			if (!this.settings.get_boolean("display-statusarea"))
+				return;
+			this.appearanceName = "position-statusarea";
+		}
 		this.oldValueAppearance = this.settings.get_int(this.appearanceName);
-		if (this.oldValueAppearance === 4)
+		if (this.oldValueAppearance === 5)
 			return;
 		else
 			this.newValueAppearance = this.oldValueAppearance + 1;
@@ -3257,6 +3323,7 @@ Prefs.prototype = {
 			("position-workspace-button"),
 			("position-appview-button"),
 			("position-favorites")
+			("position-statusarea")
 		];
 		this.appearances.forEach(
 			function(appearance) {
@@ -3286,13 +3353,15 @@ Prefs.prototype = {
 		this.valueDisplayWorkspaceButton.set_active(true);
 		this.valueDisplayShowAppsButton.set_active(true);
 		this.valueDisplayFavorites.set_active(false);
+		this.valueDisplayStatusArea.set_active(false);
 		this.settings.set_int("hover-event", 0);
 		this.valueAppearance.set_active(0);
-		this.settings.set_int("position-tasks", 4);
-		this.settings.set_int("position-desktop-button", 3);
-		this.settings.set_int("position-workspace-button", 2);
-		this.settings.set_int("position-appview-button", 1);
-		this.settings.set_int("position-favorites", 0);
+		this.settings.set_int("position-tasks", 5);
+		this.settings.set_int("position-desktop-button", 4);
+		this.settings.set_int("position-workspace-button", 3);
+		this.settings.set_int("position-appview-button", 2);
+		this.settings.set_int("position-favorites", 1);
+		this.settings.set_int("position-statusarea", 0);
 		this.valueTopPanel.set_active(true);
 		this.valueBottomPanel.set_active(false);
 		this.settings.set_boolean("position-changed", true);
@@ -3427,6 +3496,8 @@ Prefs.prototype = {
 		this.valueSeparatorRightAppview.set_value(0);
 		this.valueSeparatorLeftFavorites.set_value(0);
 		this.valueSeparatorRightFavorites.set_value(0);
+		this.valueSeparatorLeftStatusArea.set_value(0);
+		this.valueSeparatorRightStatusArea.set_value(0);
 		this.settings.set_boolean("reset-flag", false);
 	},
 

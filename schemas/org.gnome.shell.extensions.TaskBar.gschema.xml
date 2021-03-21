@@ -74,6 +74,7 @@
         <value value="2" nick="workspacebutton"/>
         <value value="3" nick="showappsbutton"/>
         <value value="4" nick="favorites"/>
+        <value value="5" nick="statusarea"/>
     </enum>
     <enum id="org.gnome.shell.extensions.TaskBar.tray-button-style">
         <value value="0" nick="off"/>
@@ -119,6 +120,11 @@
         <key name="display-favorites" type="b">
             <default>false</default>
             <summary>Display Favorites</summary>
+            <description/>
+        </key>
+        <key name="display-statusarea" type="b">
+            <default>true</default>
+            <summary>Display StatusArea</summary>
             <description/>
         </key>
         <key name="panel-position" type="i">
@@ -502,6 +508,18 @@
             <summary>Favorites Right Separator</summary>
             <description/>
         </key>
+        <key name="separator-left-statusarea" type="i">
+            <range min="0" max="1000"/>
+            <default>0</default>
+            <summary>StatusArea Left Separator</summary>
+            <description/>
+        </key>
+        <key name="separator-right-statusarea" type="i">
+            <range min="0" max="1000"/>
+            <default>0</default>
+            <summary>StatusArea Right Separator</summary>
+            <description/>
+        </key>
         <key name="separator-left-appview" type="i">
             <range min="0" max="1000"/>
             <default>0</default>
@@ -664,33 +682,39 @@
             <description/>
         </key>
         <key name="position-tasks" type="i">
-            <range min="0" max="4"/>
-            <default>4</default>
+            <range min="0" max="5"/>
+            <default>5</default>
             <summary>Position Tasks</summary>
             <description/>
         </key>
         <key name="position-desktop-button" type="i">
-            <range min="0" max="4"/>
-            <default>3</default>
+            <range min="0" max="5"/>
+            <default>4</default>
             <summary>Position Desktop Button</summary>
             <description/>
         </key>
         <key name="position-workspace-button" type="i">
-            <range min="0" max="4"/>
-            <default>2</default>
+            <range min="0" max="5"/>
+            <default>3</default>
             <summary>Position Workspace Button</summary>
             <description/>
         </key>
         <key name="position-appview-button" type="i">
-            <range min="0" max="4"/>
-            <default>1</default>
+            <range min="0" max="5"/>
+            <default>2</default>
             <summary>Position Appview Button</summary>
             <description/>
         </key>
         <key name="position-favorites" type="i">
-            <range min="0" max="4"/>
-            <default>0</default>
+            <range min="0" max="5"/>
+            <default>1</default>
             <summary>Position Favorites</summary>
+            <description/>
+        </key>
+        <key name="position-statusarea" type="i">
+            <range min="0" max="5"/>
+            <default>0</default>
+	    <summary>Position StatusArea</summary>
             <description/>
         </key>
         <key name="export-settings" type="b">
