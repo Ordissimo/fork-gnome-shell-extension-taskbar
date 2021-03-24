@@ -121,6 +121,11 @@
             <summary>Display Favorites</summary>
             <description/>
         </key>
+        <key name="display-aggregate" type="b">
+            <default>false</default>
+            <summary>Display Aggregate</summary>
+            <description/>
+        </key>
         <key name="panel-position" type="i">
             <default>1</default>
             <summary>Panel Position</summary>
@@ -459,7 +464,7 @@
             <description/>
         </key>
         <key name="tray-button" enum="org.gnome.shell.extensions.TaskBar.tray-button-style">
-            <default>'off'</default>
+            <default>'icon'</default>
             <summary>Display Tray Button</summary>
             <description/>
         </key>
@@ -474,7 +479,7 @@
             <description/>
         </key>
         <key name="hover-tray-button" type="b">
-            <default>false</default>
+            <default>true</default>
             <summary>Activate Tray on Hover</summary>
             <description/>
         </key>
@@ -500,6 +505,18 @@
             <range min="0" max="1000"/>
             <default>0</default>
             <summary>Favorites Right Separator</summary>
+            <description/>
+        </key>
+        <key name="separator-left-aggregate" type="i">
+            <range min="0" max="1000"/>
+            <default>0</default>
+            <summary>Aggregate Left Separator</summary>
+            <description/>
+        </key>
+        <key name="separator-right-aggregate" type="i">
+            <range min="0" max="1000"/>
+            <default>0</default>
+            <summary>Aggregate Right Separator</summary>
             <description/>
         </key>
         <key name="separator-left-appview" type="i">

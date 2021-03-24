@@ -103,7 +103,9 @@ TaskBar.prototype = {
 	boxDesktop: null,
 	boxMainDesktopButton: null,
 	boxMainFavorites: null,
+	boxMainAggregate: null,
 	boxMain: null,
+	boxMainSystem: null,
 	boxMainShowAppsButton: null,
 	boxMainTasksId: null,
 	boxMainTasks: null,
@@ -113,6 +115,7 @@ TaskBar.prototype = {
 	boxWorkspace: null,
 	buttonDesktop: null,
 	buttonfavorite: null,
+	buttonaggregate: null,
 	button: null,
 	buttonShowApps: null,
 	buttonTask: null,
@@ -134,6 +137,9 @@ TaskBar.prototype = {
 	favoriteapp: null,
 	favorites: null,
 	favoritesPreview: null,
+	aggregateappName: null,
+	aggregateapp: null,
+	aggregate: null,
 	focusWindow: null,
 	globalThemeChangedId: null,
 	height: null,
@@ -203,6 +209,7 @@ TaskBar.prototype = {
 	panelStyleChangedId: null,
 	pbchildren: null,
 	positionAppearance: null,
+	positionBoxBottomSystem: null,
 	positionBoxBottomEnd: null,
 	positionBoxBottomMiddle: null,
 	positionBoxBottomSettings: null,
@@ -224,16 +231,19 @@ TaskBar.prototype = {
 	separatorBoxMain: null,
 	separatorDesktop: null,
 	separatorFavorites: null,
+	separatorAggregate: null,
 	separatorLeftAppview: null,
 	separatorLeftBoxMain: null,
 	separatorLeftDesktop: null,
 	separatorLeftFavorites: null,
+	separatorLeftAggregate: null,
 	separatorLeftTasks: null,
 	separatorLeftWorkspaces: null,
 	separatorRightAppview: null,
 	separatorRightBoxMain: null,
 	separatorRightDesktop: null,
 	separatorRightFavorites: null,
+	separatorRightAggregate: null,
 	separatorRightTasks: null,
 	separatorRightWorkspaces: null,
 	separatorTasks: null,
@@ -356,8 +366,14 @@ TaskBar.prototype = {
 		//Date Menu
 		this.initDisplayDateMenu();
 
+                if (this.systemMenuContainer == null)
+                    this.systemMenuContainer = Main.panel.statusArea.aggregateMenu.container;
+
 		//System Menu
 		this.initDisplaySystemMenu();
+
+		//Add Aggregate
+	        this.addAggregate();
 
 		//Dash
 		this.initDisplayDash();
@@ -583,6 +599,8 @@ TaskBar.prototype = {
 		}
 		if (this.boxMain !== null)
 			this.boxMain = null;
+		if (this.boxMainSystem !== null)
+			this.boxMainSystem = null;
 		if (this.mainBox !== null)
 			this.mainBox = null;
 		this.cleanTasksList();
@@ -621,6 +639,7 @@ TaskBar.prototype = {
 			this.settings.connect("changed::panel-box", Lang.bind(this, this.onBoxChanged)),
 			this.settings.connect("changed::panel-position", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::display-favorites", Lang.bind(this, this.onParamChanged)),
+			this.settings.connect("changed::display-aggregate", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::display-showapps-button", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::display-workspace-button", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::workspace-button-index", Lang.bind(this, this.onParamChanged)),
@@ -670,6 +689,8 @@ TaskBar.prototype = {
 			this.settings.connect("changed::separator-right-appview", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::separator-left-favorites", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::separator-right-favorites", Lang.bind(this, this.onParamChanged)),
+			this.settings.connect("changed::separator-left-aggregate", Lang.bind(this, this.onParamChanged)),
+			this.settings.connect("changed::separator-right-aggregate", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::top-panel", Lang.bind(this, this.displayTopPanel)),
 			this.settings.connect("changed::activities-button", Lang.bind(this, this.displayActivities)),
 			this.settings.connect("changed::activities-button-color", Lang.bind(this, this.colorActivities)),
@@ -774,15 +795,25 @@ TaskBar.prototype = {
 			(this.settings.get_boolean("display-desktop-button")) ||
 			(this.settings.get_boolean("display-workspace-button")) ||
 			(this.settings.get_boolean("display-showapps-button")) ||
-			(this.settings.get_boolean("display-favorites"))) {
+			(this.settings.get_boolean("display-favorites")) ||
+			(this.settings.get_boolean("display-aggregate"))) {
 			this.setTaskBar = true;
 			this.boxMain = new St.BoxLayout({
+				style_class: "tkb-box"
+			});
+			this.boxMainSystem = new St.BoxLayout({
 				style_class: "tkb-box"
 			});
 			if (this.settings.get_boolean("display-favorites"))
 				this.boxMainFavorites = new St.BoxLayout({
 					style_class: "tkb-box"
 				});
+			if (this.settings.get_boolean("display-aggregate")) {
+                                log("Add Aggregate Box ....");
+			        this.boxMainAggregate = new St.BoxLayout({
+				        style_class: "tkb-box"
+			        });
+                        }
 			if (this.settings.get_boolean("display-showapps-button"))
 				this.boxMainShowAppsButton = new St.BoxLayout({
 					style_class: "tkb-box"
@@ -822,6 +853,13 @@ TaskBar.prototype = {
 				let separatorRightFavorites = this.settings.get_int('separator-right-favorites');
 				this.separatorFavorites = 'padding-left: ' + separatorLeftFavorites + 'px; padding-right: ' + separatorRightFavorites + 'px; ';
 				this.boxMainFavorites.set_style(this.separatorFavorites);
+			}
+			if (this.settings.get_boolean("display-aggregate")) {
+				let separatorLeftAggregate = this.settings.get_int('separator-left-aggregate');
+				let separatorRightAggregate = this.settings.get_int('separator-right-aggregate');
+				this.separatorAggregate = 'padding-left: ' + separatorLeftAggregate + 'px; padding-right: ' + separatorRightAggregate + 'px; ';
+				this.boxMainAggregate.set_style(this.separatorAggregate);
+                                log("Box Aggregate Style : " + this.separatorAggregate);
 			}
 			if (this.settings.get_boolean("display-showapps-button")) {
 				let separatorLeftAppview = this.settings.get_int('separator-left-appview');
@@ -1035,7 +1073,9 @@ TaskBar.prototype = {
 	},
 
 	appearanceOrder: function() {
+                log("Show Main Box appearanceOrder");
 		if (this.setTaskBar) {
+                        log("Show Main Box In TasBar appearanceOrder");
 			this.appearances = [
 				("position-tasks"),
 				("position-desktop-button"),
@@ -1044,10 +1084,14 @@ TaskBar.prototype = {
 				("position-favorites")
 			];
 			for (let i = 0; i <= 4; i++) {
+                                log("Show Main Box In TasBar appearanceOrder [" + i + "]");
 				this.appearances.forEach(
 					function(appearance) {
+                                                log("Show Main Box In TasBar appearanceOrder [" + i + "|" + appearance  + "]");
 						let positionAppearance = this.settings.get_int(appearance);
+                                                log("Show Main Box In TasBar appearanceOrder [" + i + "|" + appearance + " (" + positionAppearance + "==" + i + ") ]");
 						if (positionAppearance === i) {
+                                                        log("Show Box Aggregate [" + appearance + "] FOUND");
 							if ((appearance === "position-tasks") && (this.settings.get_boolean("display-tasks")))
 								this.boxMain.add_actor(this.boxMainTasks);
 							else if ((appearance === "position-desktop-button") && (this.settings.get_boolean("display-desktop-button")))
@@ -1063,6 +1107,11 @@ TaskBar.prototype = {
 					this
 				);
 			}
+		        if (this.settings.get_boolean("display-aggregate")) {
+                              log("Show Box Aggregate 1");
+			      this.boxMainSystem.add_actor(this.boxMainAggregate);
+                              log("Show Box Aggregate 2");
+                        }
 			if ((this.settings.get_enum("tray-button") !== 0) && (this.bottomPanelEndIndicator) && (ShellVersion[1] <= 14))
 				this.boxMain.add_actor(this.boxBottomPanelTrayButton);
 		}
@@ -1127,6 +1176,28 @@ TaskBar.prototype = {
 			}
 		}
 	},
+
+	//Add Aggegate
+	addAggregate: function(buttonaggregate, aggregateapp) {
+		if (this.settings.get_boolean("display-aggregate")) {
+	                let parent = this.systemMenuContainer.get_parent();
+                        if (parent) {
+                        log(">Box Aggregate Add Content");
+                              this.systemMenuContainer._dtpOriginalParent = parent;
+                              parent.remove_child(this.systemMenuContainer);
+			      this.boxMainAggregate.add_actor(this.systemMenuContainer);
+                              
+                        }
+                        log("Box Aggregate Add Content<");
+                }
+                else {
+                        if (this.systemMenuContainer._dtpOriginalParent) {
+                              this.boxMainAggregate.remove_actor(this.systemMenuContainer);
+                              this.systemMenuContainer._dtpOriginalParent.add_child(this.systemMenuContainer);
+                              delete this.systemMenuContainer._dtpOriginalParent;
+                        }
+                }
+        },
 
 	//Add Appview Button
 	addShowAppsButton: function() {
@@ -1438,7 +1509,6 @@ TaskBar.prototype = {
 
 	initDisplaySystemMenu: function() {
 		if (!this.settings.get_boolean("system-menu")) {
-			this.systemMenuContainer = Main.panel.statusArea.aggregateMenu.container;
 			this.systemMenuContainer.hide();
 		}
 		this.systemMenuColor = this.settings.get_string("system-menu-color");
@@ -1523,6 +1593,8 @@ TaskBar.prototype = {
 			if (this.settings.get_boolean("display-favorites"))
 				this.boxMainFavorites.set_style(this.separatorFavorites);
 		}
+	        if (this.settings.get_boolean("display-aggregate"))
+		        this.boxMainAggregate.set_style(this.separatorAggregate);
 	},
 
 	//Active Task Frame / Background Color
@@ -1625,12 +1697,20 @@ TaskBar.prototype = {
 		this.bottomPanelActor.set_style(this.fontSize + ' ' + this.bottomPanelBackgroundStyle);
 		this.bottomPanelActor.set_reactive(false);
 		this.positionBoxBottomStart = new St.Bin({
+			x_expand: true,
+			x_align: St.Align.START
 		});
 		this.positionBoxBottomMiddle = new St.Bin({
 			x_expand: true,
-			x_align: St.Align.END
+			x_align: St.Align.MIDDLE
 		});
 		this.positionBoxBottomEnd = new St.Bin({
+			x_expand: true,
+			x_align: St.Align.END
+		});
+		this.positionBoxBottomSystem = new St.Bin({
+			x_expand: false,
+			x_align: St.Align.END
 		});
 		this.positionBoxBottomSettings = this.settings.get_int("position-bottom-box");
 		if (this.positionBoxBottomSettings === 0)
@@ -1641,6 +1721,7 @@ TaskBar.prototype = {
 			this.positionBoxBottomEnd.add_actor(this.boxMain);
 			this.bottomPanelEndIndicator = true;
 		}
+		this.positionBoxBottomSystem.add_actor(this.boxMainSystem);
 		if ((this.settings.get_enum("tray-button") !== 0) && (!this.bottomPanelEndIndicator) && (ShellVersion[1] <= 14))
 			this.positionBoxBottomEnd.add_actor(this.boxBottomPanelTrayButton);
 		Main.layoutManager.addChrome(this.bottomPanelActor, {
@@ -1650,6 +1731,7 @@ TaskBar.prototype = {
 		this.bottomPanelActor.add_actor(this.positionBoxBottomStart);
 		this.bottomPanelActor.add_actor(this.positionBoxBottomMiddle);
 		this.bottomPanelActor.add_actor(this.positionBoxBottomEnd);
+		this.bottomPanelActor.add_actor(this.positionBoxBottomSystem);
 		let primary = Main.layoutManager.primaryMonitor;
 		this.height = (this.panelSize + this.bottomPanelVertical);
 		this.bottomPanelActor.set_position(primary.x, primary.y + primary.height - this.height);

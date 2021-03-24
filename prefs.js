@@ -337,6 +337,18 @@ Prefs.prototype = {
 		this.valueDisplayFavorites.connect('notify::active', Lang.bind(this, this.changeDisplayFavorites));
 		this.gridComponents.attach(this.valueDisplayFavorites, 3, 5, 2, 1);
 
+		let labelDisplayAggregate = new Gtk.Label({
+			label: _("Aggregate"),
+			xalign: 0
+		});
+		this.gridComponents.attach(labelDisplayAggregate, 1, 6, 1, 1);
+		this.valueDisplayAggregate = new Gtk.Switch({
+			active: this.settings.get_boolean("display-aggregate")
+		});
+		this.valueDisplayAggregate.set_halign(Gtk.Align.END);
+		this.valueDisplayAggregate.connect('notify::active', Lang.bind(this, this.changeDisplayAggregate));
+		this.gridComponents.attach(this.valueDisplayAggregate, 3, 6, 2, 1);
+
 		let valueAppearanceBox = new Gtk.Box();
 		let labelAppearanceBox = new Gtk.Label({
 			label: _("Align") + ' ',
@@ -348,11 +360,12 @@ Prefs.prototype = {
 		this.valueAppearance.append_text(_("Workspace Button"));
 		this.valueAppearance.append_text(_("Appview Button"));
 		this.valueAppearance.append_text(_("Favorites"));
+		this.valueAppearance.append_text(_("Aggregate"));
 		this.valueAppearance.set_active(this.settings.get_enum("appearance-selection"));
 		this.valueAppearance.connect('changed', Lang.bind(this, this.changeAppearanceSelection));
 		valueAppearanceBox.add(labelAppearanceBox);
 		valueAppearanceBox.add(this.valueAppearance);
-		this.gridComponents.attach(valueAppearanceBox, 1, 6, 1, 1);
+		this.gridComponents.attach(valueAppearanceBox, 1, 7, 1, 1);
 		let valueAppearanceName = new Gtk.Button({
 			label: "<"
 		});
@@ -369,32 +382,32 @@ Prefs.prototype = {
 		value2AppearanceName.connect('leave-notify-event', Lang.bind(this, function() {
 			this.settings.set_int("hover-event", 0);
 		}));
-		this.gridComponents.attach(valueAppearanceName, 3, 6, 1, 1);
-		this.gridComponents.attach(value2AppearanceName, 4, 6, 1, 1);
+		this.gridComponents.attach(valueAppearanceName, 3, 7, 1, 1);
+		this.gridComponents.attach(value2AppearanceName, 4, 7, 1, 1);
 
 		let labelTopPanel = new Gtk.Label({
 			label: _("Top Panel"),
 			xalign: 0
 		});
-		this.gridComponents.attach(labelTopPanel, 1, 7, 1, 1);
+		this.gridComponents.attach(labelTopPanel, 1, 8, 1, 1);
 		this.valueTopPanel = new Gtk.Switch({
 			active: this.settings.get_boolean("top-panel")
 		});
 		this.valueTopPanel.set_halign(Gtk.Align.END);
 		this.valueTopPanel.connect('notify::active', Lang.bind(this, this.changeTopPanel));
-		this.gridComponents.attach(this.valueTopPanel, 3, 7, 2, 1);
+		this.gridComponents.attach(this.valueTopPanel, 3, 8, 2, 1);
 
 		let labelBottomPanel = new Gtk.Label({
 			label: _("Bottom Panel"),
 			xalign: 0
 		});
-		this.gridComponents.attach(labelBottomPanel, 1, 8, 1, 1);
+		this.gridComponents.attach(labelBottomPanel, 1, 9, 1, 1);
 		this.valueBottomPanel = new Gtk.Switch({
 			active: this.settings.get_boolean("bottom-panel")
 		});
 		this.valueBottomPanel.set_halign(Gtk.Align.END);
 		this.valueBottomPanel.connect('notify::active', Lang.bind(this, this.changeBottomPanel));
-		this.gridComponents.attach(this.valueBottomPanel, 3, 8, 2, 1);
+		this.gridComponents.attach(this.valueBottomPanel, 3, 9, 2, 1);
 
 		let resetComponentsButton = new Gtk.Button({
 			label: _("Reset Overview Tab")
@@ -406,20 +419,20 @@ Prefs.prototype = {
 		}));
 		resetComponentsButton.connect('clicked', Lang.bind(this, this.resetComponents));
 		resetComponentsButton.set_tooltip_text(_("Reset the Overview Tab to the Original Overview Settings"));
-		this.gridComponents.attach(resetComponentsButton, 1, 10, 1, 1);
+		this.gridComponents.attach(resetComponentsButton, 1, 11, 1, 1);
 
 
 		let labelSpaceComponents1 = new Gtk.Label({
 			label: "\t",
 			xalign: 0
 		});
-		this.gridComponents.attach(labelSpaceComponents1, 0, 11, 1, 1);
+		this.gridComponents.attach(labelSpaceComponents1, 0, 12, 1, 1);
 		let labelSpaceComponents2 = new Gtk.Label({
 			label: "\t",
 			xalign: 0,
 			hexpand: true
 		});
-		this.gridComponents.attach(labelSpaceComponents2, 2, 9, 1, 1);
+		this.gridComponents.attach(labelSpaceComponents2, 2, 10, 1, 1);
 		let labelSpaceComponents3 = new Gtk.Label({
 			label: "<b>" + _("Overview") + "</b>",
 			hexpand: true
@@ -2444,6 +2457,10 @@ Prefs.prototype = {
 		this.settings.set_boolean("display-favorites", object.active);
 	},
 
+	changeDisplayAggregate: function(object, pspec) {
+		this.settings.set_boolean("display-aggregate", object.active);
+	},
+
 	changeAppearanceSelection: function(object) {
 		this.settings.set_enum("appearance-selection", this.valueAppearance.get_active());
 	},
@@ -3243,14 +3260,17 @@ Prefs.prototype = {
 			this.appearanceName = "position-favorites";
 		}
 		this.oldValueAppearance = this.settings.get_int(this.appearanceName);
+                log('changeAppearanceRight: old ' + this.oldValueAppearance);
 		if (this.oldValueAppearance === 4)
 			return;
 		else
 			this.newValueAppearance = this.oldValueAppearance + 1;
+                log('changeAppearanceRight new: ' + this.newValueAppearance);
 		this.setAppearance();
 	},
 
 	setAppearance: function() {
+                log("setAppearance =>");
 		this.appearances = [
 			("position-tasks"),
 			("position-desktop-button"),
@@ -3269,6 +3289,7 @@ Prefs.prototype = {
 		this.settings.set_int(this.appearanceName, this.newValueAppearance);
 		this.settings.set_int(this.resetAppearance, this.oldValueAppearance);
 		this.settings.set_boolean("position-changed", true);
+                log("setAppearance =<");
 	},
 
 	exportSettings: function() {
