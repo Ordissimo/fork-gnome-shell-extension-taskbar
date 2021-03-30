@@ -17,21 +17,105 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
+/*
+#bottomPanel {
+       background-color: white;
+}*/
 
-#bottomPanel {}
+.tkb-box-favorite {
+    background-color: transparent;
+}
 
-.tkb-box {}
+.tkb-box-favorite:hover,
+.tkb-box-favorite:focus,
+.tkb-box-favorite-selected {
+    background-color: #f19200;
+}
+
+.tkb-box-favorites {
+    background-color: white;
+    border-radius: 0 40px 40px 0;
+}
+
+.tkb-tasklabel-favorite {
+   padding: 0;
+   margin: 0;
+   font-size: 12pt;
+   font-family: Arial;
+   color: #5a6d7b;
+   font-weight: bold;
+   text-overflow: ellipsis;
+   text-align: center;
+}
+
+.tkb-tasklabel-favorite-selected {
+   padding: 0;
+   margin: 0;
+   font-size: 12pt;
+   font-family: Arial;
+   color: white;
+   font-weight: bold;
+   text-overflow: ellipsis;
+   text-align: center;
+}
+
+.tkb-taskbutton-favorite {
+   padding: 0;
+   margin: 0;
+}
+
+.tkb-task-favorite {
+	margin-top: 5px;
+	margin-bottom: 5px;
+	padding-left: 20px;
+	padding-right: 20px;
+	border: 0 solid #5a6d7b;
+        border-left: 2px solid #5a6d7b;	
+}
+
+.tkb-task-favorite:hover,
+.tkb-task-favorite:focus,
+.tkb-task-favorite:selection {
+        background-color: #f19200;
+        color: #ffffff;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	padding-left: 20px;
+	padding-right: 20px;
+	border: 0 solid #5a6d7b;
+        border-left: 2px solid #5a6d7b;	
+        border-radius: 5px;
+}
+
+.tkb-task-favorite-empty {
+    background-color: transparent;
+    border-radius: 0 40px 40px 0;
+}
+
+.tkb-task-favorite-empty-selected {
+    background-color: #f19200;
+    border-radius: 0 40px 40px 0;
+}
 
 .tkb-desktop-box {}
 
 .tkb-desktop-icon {}
-
+/*
 .tkb-task-button {
 	padding-left: 3px;
 	padding-right: 3px;
 	border: 1px;
 }
 
+.tkb-task-button-favorite {
+	padding-left: 3px;
+	padding-right: 3px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	border: 0 solid #5a6d7b;
+        border-left: 2px solid #5a6d7b;	
+}
+*/
 .tkb-task-button-bottom {
 	padding-left: 3px;
 	padding-right: 3px;
@@ -55,3 +139,18 @@
 .tkb-task-button:inactive-task-frame {}
 
 .tkb-task-button:inactive-task-no-frame {}
+
+
+
+.panel-status-menu-box {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.panel-status-indicators-box {
+    margin: 15px;
+    background-color: #1a2d3b;
+    border-radius: 20px
+}

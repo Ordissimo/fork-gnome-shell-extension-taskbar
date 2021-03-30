@@ -40,14 +40,13 @@ const PopupMenu = imports.ui.popupMenu;
 const ThumbnailsSlider = imports.ui.overviewControls.ThumbnailsSlider.prototype;
 
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
-const Lib = Extension.imports.lib;
+const Lib = Extension.imports.convenience;
+
 const Prefs = Extension.imports.prefs;
 const ShellVersion = imports.misc.config.PACKAGE_VERSION.split(".").map(function(x) {
 	return +x;
 });
 const Windows = Extension.imports.windows;
-
-const schema = "org.gnome.shell.extensions.TaskBar";
 
 const RESETBOTTOMPANELCOLOR = 'rgba(0,0,0,1)';
 
@@ -62,12 +61,23 @@ const PREVIOUSKEY = 'key-previous-task';
 const NEXTKEY = 'key-next-task';
 const DESKTOPKEY = 'key-toggle-desktop';
 
+let light = null;
+let nightlight = null;
+let volume = null;
+let network = null;
+let bluetooth = null;
+let power = null;
+let calendar = null;
+let user = null;
+let notification = null;
+
+
 function init(extensionMeta) {
-	return new TaskBar(extensionMeta, schema);
+	return new TaskBar(extensionMeta);
 }
 
-function TaskBar(extensionMeta, schema) {
-	this.init(extensionMeta, schema);
+function TaskBar(extensionMeta) {
+	this.init(extensionMeta);
 }
 
 TaskBar.prototype = {
@@ -103,7 +113,9 @@ TaskBar.prototype = {
 	boxDesktop: null,
 	boxMainDesktopButton: null,
 	boxMainFavorites: null,
+	boxMainAggregate: null,
 	boxMain: null,
+	boxMainSystem: null,
 	boxMainShowAppsButton: null,
 	boxMainTasksId: null,
 	boxMainTasks: null,
@@ -113,6 +125,7 @@ TaskBar.prototype = {
 	boxWorkspace: null,
 	buttonDesktop: null,
 	buttonfavorite: null,
+	buttonaggregate: null,
 	button: null,
 	buttonShowApps: null,
 	buttonTask: null,
@@ -134,6 +147,9 @@ TaskBar.prototype = {
 	favoriteapp: null,
 	favorites: null,
 	favoritesPreview: null,
+	aggregateappName: null,
+	aggregateapp: null,
+	aggregate: null,
 	focusWindow: null,
 	globalThemeChangedId: null,
 	height: null,
@@ -203,6 +219,7 @@ TaskBar.prototype = {
 	panelStyleChangedId: null,
 	pbchildren: null,
 	positionAppearance: null,
+	positionBoxBottomSystem: null,
 	positionBoxBottomEnd: null,
 	positionBoxBottomMiddle: null,
 	positionBoxBottomSettings: null,
@@ -224,16 +241,19 @@ TaskBar.prototype = {
 	separatorBoxMain: null,
 	separatorDesktop: null,
 	separatorFavorites: null,
+	separatorAggregate: null,
 	separatorLeftAppview: null,
 	separatorLeftBoxMain: null,
 	separatorLeftDesktop: null,
 	separatorLeftFavorites: null,
+	separatorLeftAggregate: null,
 	separatorLeftTasks: null,
 	separatorLeftWorkspaces: null,
 	separatorRightAppview: null,
 	separatorRightBoxMain: null,
 	separatorRightDesktop: null,
 	separatorRightFavorites: null,
+	separatorRightAggregate: null,
 	separatorRightTasks: null,
 	separatorRightWorkspaces: null,
 	separatorTasks: null,
@@ -294,10 +314,18 @@ TaskBar.prototype = {
 	xsettings: null,
 	y: null,
 	yOffset: null,
+	statusArea: {},
+	favoriteSelected: {},
+	boxFavorites: [],
+	iconFavorites: [],
+	iconNameFavorites: [],
+	labelFavorites: [],
+	selectedFavorites: [],
+	boxFavoriteEmpty: null,
+	menuManager: null,
 
-	init: function(extensionMeta, schema) {
+	init: function(extensionMeta) {
 		this.extensionMeta = extensionMeta;
-		this.schema = schema;
 	},
 
 	onParamChanged: function() {
@@ -308,8 +336,23 @@ TaskBar.prototype = {
 	},
 
 	enable: function() {
-		let settings = new Lib.Settings(this.schema);
-		this.settings = settings.getSettings();
+                Main.panel.statusArea.aggregateMenu.container.hide();
+                Main.panel.statusArea.dateMenu.container.hide();
+                Main.panel._centerBox.remove_child(Main.panel.statusArea.dateMenu.container);
+
+                network = new Extension.imports.indicators.network.NetworkIndicator();
+                // bluetooth = new Extension.imports.indicators.bluetooth.BluetoothIndicator();
+                volume = new Extension.imports.indicators.volume.VolumeIndicator();
+                power = new Extension.imports.indicators.power.PowerIndicator();
+                // calendar = new Extension.imports.indicators.calendar.CalendarIndicator();
+                // notification = new Extension.imports.indicators.notification.NotificationIndicator();
+                // user = new Extension.imports.indicators.system.UserIndicator();
+                // nightlight = new Extension.imports.indicators.nightlight.NightLightIndicator();
+                light = new Extension.imports.indicators.light.LightIndicator();
+	
+		this.settings = Lib.getSettings();
+
+		this.menuManager = new PopupMenu.PopupMenuManager(Main.panel);
 
 		//Top Panel Background Color
 		this.changeTopPanelBackgroundColor();
@@ -359,6 +402,9 @@ TaskBar.prototype = {
 		//System Menu
 		this.initDisplaySystemMenu();
 
+		//Add Aggregate
+	        this.addAggregate();
+
 		//Dash
 		this.initDisplayDash();
 
@@ -395,6 +441,31 @@ TaskBar.prototype = {
 			Main.overview.disconnect(this.overviewShowingId);
 			this.overviewShowingId = null;
 		}
+
+		if (this.settings.get_boolean("display-aggregate")) {
+                        if (light)
+                             light.destroy();
+/*
+                        if (nightlight)
+                             nightlight.destroy();
+*/
+                        if (volume)
+                             volume.destroy();
+                        if (power)
+                             power.destroy();
+                        if (network)
+                             network.destroy();
+/*
+                        if (bluetooth)
+                             bluetooth.destroy();
+                        if (calendar)
+                             calendar.destroy();
+                        if (user)
+                             user.destroy();
+                        if (notification)
+                             notification.destroy();
+*/
+                }
 
 		//Show Activities if hidden
 		if (!this.settings.get_boolean("activities-button"))
@@ -583,6 +654,8 @@ TaskBar.prototype = {
 		}
 		if (this.boxMain !== null)
 			this.boxMain = null;
+		if (this.boxMainSystem !== null)
+			this.boxMainSystem = null;
 		if (this.mainBox !== null)
 			this.mainBox = null;
 		this.cleanTasksList();
@@ -605,6 +678,9 @@ TaskBar.prototype = {
 			Main.panel._rightCorner.show();
 			Main.panel.show();
 		}
+                Main.panel.statusArea.aggregateMenu.container.show();
+		Main.panel.statusArea.dateMenu.container.show();
+		Main.panel._centerBox.add_child(Main.panel.statusArea.dateMenu.container);
 	},
 
 	setSignals: function() {
@@ -621,6 +697,7 @@ TaskBar.prototype = {
 			this.settings.connect("changed::panel-box", Lang.bind(this, this.onBoxChanged)),
 			this.settings.connect("changed::panel-position", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::display-favorites", Lang.bind(this, this.onParamChanged)),
+			this.settings.connect("changed::display-aggregate", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::display-showapps-button", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::display-workspace-button", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::workspace-button-index", Lang.bind(this, this.onParamChanged)),
@@ -670,6 +747,8 @@ TaskBar.prototype = {
 			this.settings.connect("changed::separator-right-appview", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::separator-left-favorites", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::separator-right-favorites", Lang.bind(this, this.onParamChanged)),
+			this.settings.connect("changed::separator-left-aggregate", Lang.bind(this, this.onParamChanged)),
+			this.settings.connect("changed::separator-right-aggregate", Lang.bind(this, this.onParamChanged)),
 			this.settings.connect("changed::top-panel", Lang.bind(this, this.displayTopPanel)),
 			this.settings.connect("changed::activities-button", Lang.bind(this, this.displayActivities)),
 			this.settings.connect("changed::activities-button-color", Lang.bind(this, this.colorActivities)),
@@ -774,15 +853,25 @@ TaskBar.prototype = {
 			(this.settings.get_boolean("display-desktop-button")) ||
 			(this.settings.get_boolean("display-workspace-button")) ||
 			(this.settings.get_boolean("display-showapps-button")) ||
-			(this.settings.get_boolean("display-favorites"))) {
+			(this.settings.get_boolean("display-favorites")) ||
+			(this.settings.get_boolean("display-aggregate"))) {
 			this.setTaskBar = true;
 			this.boxMain = new St.BoxLayout({
 				style_class: "tkb-box"
 			});
+			this.boxMainSystem = new St.BoxLayout({
+				style_class: "tkb-box"
+			});
 			if (this.settings.get_boolean("display-favorites"))
 				this.boxMainFavorites = new St.BoxLayout({
-					style_class: "tkb-box"
+					style_class: "tkb-box-favorites"
 				});
+			if (this.settings.get_boolean("display-aggregate")) {
+                                log("Add Aggregate Box ....");
+			        this.boxMainAggregate = new St.BoxLayout({
+				        style_class: "panel-status-indicators-box"
+			        });
+                        }
 			if (this.settings.get_boolean("display-showapps-button"))
 				this.boxMainShowAppsButton = new St.BoxLayout({
 					style_class: "tkb-box"
@@ -1035,7 +1124,9 @@ TaskBar.prototype = {
 	},
 
 	appearanceOrder: function() {
+                log("Show Main Box appearanceOrder");
 		if (this.setTaskBar) {
+                        log("Show Main Box In TasBar appearanceOrder");
 			this.appearances = [
 				("position-tasks"),
 				("position-desktop-button"),
@@ -1044,10 +1135,14 @@ TaskBar.prototype = {
 				("position-favorites")
 			];
 			for (let i = 0; i <= 4; i++) {
+                                log("Show Main Box In TasBar appearanceOrder [" + i + "]");
 				this.appearances.forEach(
 					function(appearance) {
+                                                log("Show Main Box In TasBar appearanceOrder [" + i + "|" + appearance  + "]");
 						let positionAppearance = this.settings.get_int(appearance);
+                                                log("Show Main Box In TasBar appearanceOrder [" + i + "|" + appearance + " (" + positionAppearance + "==" + i + ") ]");
 						if (positionAppearance === i) {
+                                                        log("Show Box Aggregate [" + appearance + "] FOUND");
 							if ((appearance === "position-tasks") && (this.settings.get_boolean("display-tasks")))
 								this.boxMain.add_actor(this.boxMainTasks);
 							else if ((appearance === "position-desktop-button") && (this.settings.get_boolean("display-desktop-button")))
@@ -1063,6 +1158,11 @@ TaskBar.prototype = {
 					this
 				);
 			}
+		        if (this.settings.get_boolean("display-aggregate")) {
+                              log("Show Box Aggregate 1");
+			      this.boxMainSystem.add_actor(this.boxMainAggregate);
+                              log("Show Box Aggregate 2");
+                        }
 			if ((this.settings.get_enum("tray-button") !== 0) && (this.bottomPanelEndIndicator) && (ShellVersion[1] <= 14))
 				this.boxMain.add_actor(this.boxBottomPanelTrayButton);
 		}
@@ -1091,42 +1191,190 @@ TaskBar.prototype = {
 
 	//Add Favorites
 	addFavorites: function(buttonfavorite, favoriteapp) {
-		this.installedChangedId = null;
-		this.changedId = null;
-		if (this.settings.get_boolean("display-favorites")) {
-			//Connect Favorites Changes
-			this.installedChangedId = Shell.AppSystem.get_default().connect('installed-changed', Lang.bind(this, this.onParamChanged));
-			this.changedId = AppFavorites.getAppFavorites().connect('changed', Lang.bind(this, this.onParamChanged));
+                this.installedChangedId = null;
+                this.changedId = null;
+                if (this.settings.get_boolean("display-favorites")) {
+                        //Connect Favorites Changes
+                        this.installedChangedId = Shell.AppSystem.get_default().connect('installed-changed', Lang.bind(this, this.onParamChanged));
+                        this.changedId = AppFavorites.getAppFavorites().connect('changed', Lang.bind(this, this.onParamChanged));
 
-			let favorites = global.settings.get_strv(AppFavorites.getAppFavorites().FAVORITE_APPS_KEY);
-			for (let i = 0; i < favorites.length; ++i) {
-				let favoriteapp = Shell.AppSystem.get_default().lookup_app(favorites[i]);
-				if (favoriteapp === null) {
-					continue;
-				}
-				let buttonfavorite = new St.Button({
-					style_class: "tkb-task-button",
-					child: favoriteapp.create_icon_texture(this.panelSize)
+                        let favorites = global.settings.get_strv(AppFavorites.getAppFavorites().FAVORITE_APPS_KEY);
+                        for (let i = 0; i < favorites.length; ++i) {
+                                let favoriteapp = Shell.AppSystem.get_default().lookup_app(favorites[i]);
+                                if (favoriteapp === null) {
+                                        continue;
+                                }
+                                let appInfo = Gio.DesktopAppInfo.new(favoriteapp.get_id())
+				let label = "";
+				this.favoriteSelected[favoriteapp.get_name()] = false;
+                                let boxFavorite = new St.BoxLayout({
+                                    style_class: "tkb-box-favorite",
+			            x_align: St.Align.MIDDLE,
+                                    vertical: true,
+                                    height: 78,
+				    reactive: true,
+                                    track_hover: true
+                                });
+                                let buttonboxfavorite = new St.BoxLayout({
+                                    style_class: "tkb-task-favorite",
+			            x_align: St.Align.MIDDLE,
+                                    vertical: true,
+                                    height: 68,
+                                });
+				log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> [" + appInfo.get_string('Icon') + "]");
+				boxFavorite.add_child(buttonboxfavorite);
+				let iconFavorite = new St.Icon({
+					icon_name: appInfo.get_string('Icon'),
+					icon_size: 50
 				});
-				buttonfavorite.connect('clicked', Lang.bind(this, function() {
-					favoriteapp.open_new_window(-1);
-				}, favoriteapp));
-				buttonfavorite.connect("enter-event", Lang.bind(this, function() {
-					//Hide current preview if necessary
-					this.hidePreview();
-					if (this.settings.get_enum("display-favorites-label") !== 0) {
-						if (this.settings.get_int("preview-delay") === 0)
-							this.showFavoritesPreview(buttonfavorite, favoriteapp);
-						else
-							this.previewTimer = Mainloop.timeout_add(this.settings.get_int("preview-delay"),
-								Lang.bind(this, this.showFavoritesPreview, buttonfavorite, favoriteapp));
+                                buttonboxfavorite.add_child(iconFavorite);
+				let labeltmp = appInfo.get_string('X-ORDISSIMO-Name');
+                                if (labeltmp)
+				    label = labeltmp;
+				else
+				    label = favoriteapp.get_name();
+                                let labelfavorite = new St.Label({
+			            y_align: St.Align.END,
+				    text: label
+				});
+                                labelfavorite.set_style_class_name('tkb-tasklabel-favorite');
+
+				this.boxFavorites[i] = boxFavorite;
+				this.iconFavorites[i] = iconFavorite;
+				this.iconNameFavorites[i] = appInfo.get_string('Icon');
+				this.labelFavorites[i] = labelfavorite;
+				this.selectedFavorites[i] = false;
+                                buttonboxfavorite.add_child(labelfavorite);
+				boxFavorite.set_track_hover(true);
+				boxFavorite.connect('button-release-event', Lang.bind(this, function() {
+					var e = null;
+                                        if (appInfo && appInfo.get_boolean('X-ORDISSIMO-NoWindows')) {
+					    try {
+					        GLib.spawn_command_line_async(appInfo.get_executable(), e)
+					    } catch (e) {
+						log(e)
+					    }
 					}
-				}, buttonfavorite, favoriteapp));
-				buttonfavorite.connect("leave-event", Lang.bind(this, this.hidePreview));
-				this.boxMainFavorites.add_actor(buttonfavorite);
-			}
-		}
+					else {
+                                            let windowTracker = Shell.WindowTracker.get_default();
+					    if (windowTracker) {
+                                                 let allWindows = global.display.get_tab_list(Meta.TabList.NORMAL, null);
+					         if (allWindows) {
+                                                     let cachedWindows = allWindows.filter(w => windowTracker.get_window_app(w).get_name() === favoriteapp.get_name());
+					             log("Application [" + favoriteapp.get_name() + " x " + cachedWindows.length + "]");
+					             if (!cachedWindows || cachedWindows.length == 0) {
+					                 log("\tCreate new Windows ...");
+					                 favoriteapp.activate()
+					             }
+					             else {
+					                 log("\tSwitch to workspace ...");
+                                                         let workspace = cachedWindows[0].get_workspace()
+                                                         if (workspace) {
+                                                             Main.wm.actionMoveWorkspace(workspace)
+                                                         }
+					             }
+					         }
+					    }
+					}
+					for (let x = 0; x < this.labelFavorites.length; x++) {
+					    if (x == i) {
+					         this.selectedFavorites[x] = true;
+                                                 this.labelFavorites[x].remove_style_class_name('tkb-tasklabel-favorite');
+                                                 this.labelFavorites[x].set_style_class_name('tkb-tasklabel-favorite-selected');
+                                                 this.boxFavorites[x].remove_style_class_name("tkb-box-favorite");
+                                                 this.boxFavorites[x].set_style_class_name("tkb-box-favorite-selected");
+				                 let icon_name = this.iconNameFavorites[x].slice(0, -4);
+				                 let gicon = Gio.Icon.new_for_string(icon_name);
+				                 this.iconFavorites[x].set_gicon(gicon);
+                                                 if (x == (this.labelFavorites.length -  1)) {
+	                                               this.boxFavoriteEmpty.remove_style_class_name('tkb-task-favorite-empty');
+	                                               this.boxFavoriteEmpty.set_style_class_name('tkb-task-favorite-empty-selected');
+                                                 }
+					    }
+					    else if (this.selectedFavorites[x] == true) {
+					         this.selectedFavorites[x] = false;
+                                                 this.labelFavorites[x].remove_style_class_name('tkb-tasklabel-favorite-selected');
+                                                 this.labelFavorites[x].set_style_class_name('tkb-tasklabel-favorite');
+                                                 this.boxFavorites[x].remove_style_class_name("tkb-box-favorite-selected");
+                                                 this.boxFavorites[x].set_style_class_name("tkb-box-favorite");
+				                 let gicon = Gio.Icon.new_for_string(this.iconNameFavorites[x]);
+				                 this.iconFavorites[x].set_gicon(gicon);
+                                                 if (x == (this.labelFavorites.length -  1)) {
+	                                               this.boxFavoriteEmpty.remove_style_class_name('tkb-task-favorite-empty-selected');
+	                                               this.boxFavoriteEmpty.set_style_class_name('tkb-task-favorite-empty');
+                                                 }
+					    }
+					}
+				}, favoriteapp, appInfo, favorites, this, i));
+                                this.boxMainFavorites.add_actor(boxFavorite);
+                        }
+	                this.boxFavoriteEmpty = new St.BoxLayout({
+                            style_class: "tkb-task-favorite-empty",
+			    x_align: St.Align.MIDDLE,
+                            vertical: true,
+                            width: 40,
+                            height: 68
+                        });
+                        this.boxMainFavorites.add_actor(this.boxFavoriteEmpty);
+                }
 	},
+
+	//Add Aggegate
+	addAggregate: function(buttonaggregate, aggregateapp) {
+		if (this.settings.get_boolean("display-aggregate")) {
+                       
+                        // this.addToStatusArea(calendar.name, calendar, 0, this.boxMainAggregate);
+                        this.addToStatusArea(power.name, power, 0, this.boxMainAggregate);
+                        this.addToStatusArea(light.name, light, 0, this.boxMainAggregate);
+                        this.addToStatusArea(volume.name, volume, 0, this.boxMainAggregate);
+                        this.addToStatusArea(network.name, network, 0, this.boxMainAggregate);
+                }
+       },
+
+       _addToPanelBox: function(role, indicator, position, box) {
+            let container = indicator.container;
+            container.show();
+
+            let parent = container.get_parent();
+            if (parent)
+                 parent.remove_actor(container);
+
+
+            box.insert_child_at_index(container, position);
+            if (indicator.menu)
+                 this.menuManager.addMenu(indicator.menu);
+            this.statusArea[role] = indicator;
+            let destroyId = indicator.connect('destroy', emitter => {
+                 delete this.statusArea[role];
+                 emitter.disconnect(destroyId);
+            });
+            indicator.connect('menu-set', this._onMenuSet.bind(this));
+            this._onMenuSet(indicator);
+       },
+
+       addToStatusArea: function(role, indicator, position, box) {
+            if (this.statusArea[role])
+                throw new Error('Extension point conflict: there is already a status indicator for role %s'.format(role));
+
+            if (!(indicator instanceof PanelMenu.Button))
+                throw new TypeError('Status indicator must be an instance of PanelMenu.Button');
+
+            position = position || 0;
+            this.statusArea[role] = indicator;
+            this._addToPanelBox(role, indicator, position, box);
+            return indicator;
+       },
+
+        _onMenuSet: function(indicator) {
+            if (!indicator.menu || indicator.menu._openChangedId)
+                return;
+
+            indicator.menu._openChangedId = indicator.menu.connect('open-state-changed',
+                (menu, isOpen) => {
+                    if (Clutter.ActorAlign.END == Main.messageTray.bannerAlignment)
+                        Main.messageTray.bannerBlocked = isOpen;
+            });
+        },
 
 	//Add Appview Button
 	addShowAppsButton: function() {
@@ -1438,7 +1686,7 @@ TaskBar.prototype = {
 
 	initDisplaySystemMenu: function() {
 		if (!this.settings.get_boolean("system-menu")) {
-			this.systemMenuContainer = Main.panel.statusArea.aggregateMenu.container;
+                        this.systemMenuContainer = Main.panel.statusArea.aggregateMenu.container;
 			this.systemMenuContainer.hide();
 		}
 		this.systemMenuColor = this.settings.get_string("system-menu-color");
@@ -1523,6 +1771,8 @@ TaskBar.prototype = {
 			if (this.settings.get_boolean("display-favorites"))
 				this.boxMainFavorites.set_style(this.separatorFavorites);
 		}
+	        //if (this.settings.get_boolean("display-aggregate"))
+		        this.boxMainAggregate.set_style(this.separatorAggregate);
 	},
 
 	//Active Task Frame / Background Color
@@ -1625,12 +1875,20 @@ TaskBar.prototype = {
 		this.bottomPanelActor.set_style(this.fontSize + ' ' + this.bottomPanelBackgroundStyle);
 		this.bottomPanelActor.set_reactive(false);
 		this.positionBoxBottomStart = new St.Bin({
+			x_expand: true,
+			x_align: St.Align.START
 		});
 		this.positionBoxBottomMiddle = new St.Bin({
 			x_expand: true,
-			x_align: St.Align.END
+			x_align: St.Align.MIDDLE
 		});
 		this.positionBoxBottomEnd = new St.Bin({
+			x_expand: true,
+			x_align: St.Align.END
+		});
+		this.positionBoxBottomSystem = new St.Bin({
+			x_expand: false,
+			x_align: St.Align.END
 		});
 		this.positionBoxBottomSettings = this.settings.get_int("position-bottom-box");
 		if (this.positionBoxBottomSettings === 0)
@@ -1641,6 +1899,7 @@ TaskBar.prototype = {
 			this.positionBoxBottomEnd.add_actor(this.boxMain);
 			this.bottomPanelEndIndicator = true;
 		}
+		this.positionBoxBottomSystem.add_actor(this.boxMainSystem);
 		if ((this.settings.get_enum("tray-button") !== 0) && (!this.bottomPanelEndIndicator) && (ShellVersion[1] <= 14))
 			this.positionBoxBottomEnd.add_actor(this.boxBottomPanelTrayButton);
 		Main.layoutManager.addChrome(this.bottomPanelActor, {
@@ -1650,6 +1909,7 @@ TaskBar.prototype = {
 		this.bottomPanelActor.add_actor(this.positionBoxBottomStart);
 		this.bottomPanelActor.add_actor(this.positionBoxBottomMiddle);
 		this.bottomPanelActor.add_actor(this.positionBoxBottomEnd);
+		this.bottomPanelActor.add_actor(this.positionBoxBottomSystem);
 		let primary = Main.layoutManager.primaryMonitor;
 		this.height = (this.panelSize + this.bottomPanelVertical);
 		this.bottomPanelActor.set_position(primary.x, primary.y + primary.height - this.height);
