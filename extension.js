@@ -1189,6 +1189,38 @@ TaskBar.prototype = {
 			this.boxBottomPanelTrayButton.hide();
 	},
 
+        favoriteAppSelected: function(i) {
+		for (let x = 0; x < this.labelFavorites.length; x++) {
+		    if (x == i) {
+		         this.selectedFavorites[x] = true;
+                         this.labelFavorites[x].remove_style_class_name('tkb-tasklabel-favorite');
+                         this.labelFavorites[x].set_style_class_name('tkb-tasklabel-favorite-selected');
+                         this.boxFavorites[x].remove_style_class_name("tkb-box-favorite");
+                         this.boxFavorites[x].set_style_class_name("tkb-box-favorite-selected");
+		         let icon_name = this.iconNameFavorites[x].slice(0, -4);
+		         let gicon = Gio.Icon.new_for_string(icon_name);
+		         this.iconFavorites[x].set_gicon(gicon);
+                         if (x == (this.labelFavorites.length -  1)) {
+	                       this.boxFavoriteEmpty.remove_style_class_name('tkb-task-favorite-empty');
+	                       this.boxFavoriteEmpty.set_style_class_name('tkb-task-favorite-empty-selected');
+                         }
+		    }
+		    else if (this.selectedFavorites[x] == true) {
+		         this.selectedFavorites[x] = false;
+                         this.labelFavorites[x].remove_style_class_name('tkb-tasklabel-favorite-selected');
+                         this.labelFavorites[x].set_style_class_name('tkb-tasklabel-favorite');
+                         this.boxFavorites[x].remove_style_class_name("tkb-box-favorite-selected");
+                         this.boxFavorites[x].set_style_class_name("tkb-box-favorite");
+		         let gicon = Gio.Icon.new_for_string(this.iconNameFavorites[x]);
+		         this.iconFavorites[x].set_gicon(gicon);
+                         if (x == (this.labelFavorites.length -  1)) {
+	                       this.boxFavoriteEmpty.remove_style_class_name('tkb-task-favorite-empty-selected');
+	                       this.boxFavoriteEmpty.set_style_class_name('tkb-task-favorite-empty');
+                         }
+		    }
+		}
+        },
+
 	//Add Favorites
 	addFavorites: function(buttonfavorite, favoriteapp) {
                 this.installedChangedId = null;
@@ -1276,35 +1308,7 @@ TaskBar.prototype = {
 					         }
 					    }
 					}
-					for (let x = 0; x < this.labelFavorites.length; x++) {
-					    if (x == i) {
-					         this.selectedFavorites[x] = true;
-                                                 this.labelFavorites[x].remove_style_class_name('tkb-tasklabel-favorite');
-                                                 this.labelFavorites[x].set_style_class_name('tkb-tasklabel-favorite-selected');
-                                                 this.boxFavorites[x].remove_style_class_name("tkb-box-favorite");
-                                                 this.boxFavorites[x].set_style_class_name("tkb-box-favorite-selected");
-				                 let icon_name = this.iconNameFavorites[x].slice(0, -4);
-				                 let gicon = Gio.Icon.new_for_string(icon_name);
-				                 this.iconFavorites[x].set_gicon(gicon);
-                                                 if (x == (this.labelFavorites.length -  1)) {
-	                                               this.boxFavoriteEmpty.remove_style_class_name('tkb-task-favorite-empty');
-	                                               this.boxFavoriteEmpty.set_style_class_name('tkb-task-favorite-empty-selected');
-                                                 }
-					    }
-					    else if (this.selectedFavorites[x] == true) {
-					         this.selectedFavorites[x] = false;
-                                                 this.labelFavorites[x].remove_style_class_name('tkb-tasklabel-favorite-selected');
-                                                 this.labelFavorites[x].set_style_class_name('tkb-tasklabel-favorite');
-                                                 this.boxFavorites[x].remove_style_class_name("tkb-box-favorite-selected");
-                                                 this.boxFavorites[x].set_style_class_name("tkb-box-favorite");
-				                 let gicon = Gio.Icon.new_for_string(this.iconNameFavorites[x]);
-				                 this.iconFavorites[x].set_gicon(gicon);
-                                                 if (x == (this.labelFavorites.length -  1)) {
-	                                               this.boxFavoriteEmpty.remove_style_class_name('tkb-task-favorite-empty-selected');
-	                                               this.boxFavoriteEmpty.set_style_class_name('tkb-task-favorite-empty');
-                                                 }
-					    }
-					}
+                                        this.favoriteAppSelected(i);
 				}, favoriteapp, appInfo, favorites, this, i));
                                 this.boxMainFavorites.add_actor(boxFavorite);
                         }
@@ -1316,6 +1320,8 @@ TaskBar.prototype = {
                             height: 68
                         });
                         this.boxMainFavorites.add_actor(this.boxFavoriteEmpty);
+                        this.favoriteAppSelected(0);
+                        Main.wm.actionMoveWorkspace(global.workspace_manager.get_workspace_by_index(0));
                 }
 	},
 
