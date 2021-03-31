@@ -323,6 +323,7 @@ TaskBar.prototype = {
 	selectedFavorites: [],
 	boxFavoriteEmpty: null,
 	menuManager: null,
+	workspaceSwitch: null,
 
 	init: function(extensionMeta) {
 		this.extensionMeta = extensionMeta;
@@ -340,6 +341,7 @@ TaskBar.prototype = {
                 Main.panel.statusArea.dateMenu.container.hide();
                 Main.panel._centerBox.remove_child(Main.panel.statusArea.dateMenu.container);
 
+	        this.workspaceSwitch = global.workspace_manager.connect('workspace-switched', Lang.bind(this, this.workspaceSwitched));
                 network = new Extension.imports.indicators.network.NetworkIndicator();
                 // bluetooth = new Extension.imports.indicators.bluetooth.BluetoothIndicator();
                 volume = new Extension.imports.indicators.volume.VolumeIndicator();
@@ -432,6 +434,12 @@ TaskBar.prototype = {
 	},
 
 	disable: function() {
+                //Disconnect Workspace Signals
+                if (this.workspaceSwitch !== null) {
+                        global.workspace_manager.disconnect(this.workspaceSwitch);
+                        this.workspaceSwitch = null;
+                }
+
 		//Disconnect Overview Signals
 		if (this.overviewHidingId !== null) {
 			Main.overview.disconnect(this.overviewHidingId);
@@ -1189,6 +1197,11 @@ TaskBar.prototype = {
 			this.boxBottomPanelTrayButton.hide();
 	},
 
+	workspaceSwitched: function() {
+                let index = global.workspace_manager.get_active_workspace().index();
+                this.favoriteAppSelected(index);
+	},
+
         favoriteAppSelected: function(i) {
 		for (let x = 0; x < this.labelFavorites.length; x++) {
 		    if (x == i) {
@@ -1321,8 +1334,8 @@ TaskBar.prototype = {
 				}, favoriteapp, appInfo, favorites, this, i));
                                 this.boxMainFavorites.add_actor(boxFavorite);
                         }
-                        this.favoriteAppSelected(0);
                         Main.wm.actionMoveWorkspace(global.workspace_manager.get_workspace_by_index(0));
+                        this.favoriteAppSelected(0);
                 }
 	},
 
