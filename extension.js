@@ -1255,11 +1255,14 @@ TaskBar.prototype = {
 				else
                                     boxFavorite.set_style_class_name("tkb-box-favorite");
                                 let buttonboxfavorite = new St.BoxLayout({
-                                    style_class: "tkb-task-favorite",
 			            x_align: St.Align.MIDDLE,
                                     vertical: true,
                                     height: 68,
                                 });
+                                if (i == 0)
+                                    buttonboxfavorite.set_style_class_name("tkb-task-favorite-first");
+				else
+                                    buttonboxfavorite.set_style_class_name("tkb-task-favorite");
 				boxFavorite.add_child(buttonboxfavorite);
 				let iconFavorite = new St.Icon({
 					icon_name: appInfo.get_string('Icon'),

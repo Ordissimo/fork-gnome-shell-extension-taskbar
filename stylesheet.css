@@ -26,10 +26,27 @@
     background-color: transparent;
 }
 
+/*
 .tkb-box-favorite:hover,
 .tkb-box-favorite:focus,
+*/
 .tkb-box-favorite-selected {
     background-color: #f19200;
+}
+.tkb-box-favorite-last {
+    background-color: transparent;
+    border-radius: 0 40px 40px 0;
+    padding-right: 10px;
+}
+
+/*
+.tkb-box-favorite-last:hover,
+.tkb-box-favorite-last:focus,
+*/
+.tkb-box-favorite-last-selected {
+    background-color: #f19200;
+    border-radius: 0 40px 40px 0;
+    padding-right: 10px;
 }
 
 .tkb-box-favorites {
@@ -64,6 +81,14 @@
    margin: 0;
 }
 
+.tkb-task-favorite-first {
+	margin-top: 5px;
+	margin-bottom: 5px;
+	padding-left: 20px;
+	padding-right: 20px;
+	border: 0
+}
+
 .tkb-task-favorite {
 	margin-top: 5px;
 	margin-bottom: 5px;
@@ -73,34 +98,10 @@
         border-left: 2px solid #5a6d7b;	
 }
 
-.tkb-task-favorite:hover,
-.tkb-task-favorite:focus,
-.tkb-task-favorite:selection {
-        background-color: #f19200;
-        color: #ffffff;
-	margin-top: 5px;
-	margin-bottom: 5px;
-	padding-left: 20px;
-	padding-right: 20px;
-	border: 0 solid #5a6d7b;
-        border-left: 2px solid #5a6d7b;	
-        border-radius: 5px;
-}
-
-.tkb-task-favorite-empty {
-    background-color: transparent;
-    border-radius: 0 40px 40px 0;
-}
-
-.tkb-task-favorite-empty-selected {
-    background-color: #f19200;
-    border-radius: 0 40px 40px 0;
-}
-
 .tkb-desktop-box {}
 
 .tkb-desktop-icon {}
-/*
+
 .tkb-task-button {
 	padding-left: 3px;
 	padding-right: 3px;
@@ -115,7 +116,7 @@
 	border: 0 solid #5a6d7b;
         border-left: 2px solid #5a6d7b;	
 }
-*/
+
 .tkb-task-button-bottom {
 	padding-left: 3px;
 	padding-right: 3px;
