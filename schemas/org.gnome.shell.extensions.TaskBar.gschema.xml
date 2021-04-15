@@ -742,5 +742,12 @@
             <default>['']</default>
 	    <summary>Key to toogle the Desktop View</summary>
         </key>
+        <key name="override-desktop-list" type="as">
+		<default>
+		    ["gnome-control-center.desktop;gnome-applications-panel.desktop gnome-background-panel.desktop gnome-bluetooth-panel.desktop gnome-camera-panel.desktop gnome-color-panel.desktop gnome-datetime-panel.desktop gnome-default-apps-panel.desktop gnome-diagnostics-panel.desktop gnome-display-panel.desktop gnome-info-overview-panel.desktop gnome-keyboard-panel.desktop gnome-location-panel.desktop gnome-lock-panel.desktop gnome-microphone-panel.desktop gnome-mouse-panel.desktop gnome-network-panel.desktop gnome-notifications-panel.desktop gnome-online-accounts-panel.desktop gnome-power-panel.desktop gnome-printers-panel.desktop gnome-region-panel.desktop gnome-removable-media-panel.desktop gnome-search-panel.desktop gnome-sharing-panel.desktop gnome-sound-panel.desktop gnome-thunderbolt-panel.desktop gnome-universal-access-panel.desktop gnome-usage-panel.desktop gnome-user-accounts-panel.desktop gnome-user-share-webdav.desktop gnome-wacom-panel.desktop gnome-wifi-panel.desktop", "thunderbird.desktop;mailissimo-open.desktop mailissimo-showread.desktop mailissimo-showwrite.desktop", "firefox-esr.desktop;webissimo-bookmarks.desktop webissimo-search.desktop"]
+	        </default>
+            <summary>Replacement list of desktops files</summary>
+            <description/>
+        </key>
     </schema>
 </schemalist>

@@ -84,12 +84,24 @@ const ExecIface = '<node> \
 
 
 class Exec {
-	constructor() {
+	constructor(settings) {
+		this.settings = settings;
+                var va  = settings.get_value("override-desktop-list");
+		var n1 = va.n_children();
+		this.override_desktop_list = new Array()
+                for (var i = 0; i < n1; i++) {
+                    var cval = va.get_child_value(i);
+		    var str= cval.get_string().toString();
+                    // log("Value[" + i + "] = " +  str);
+		    var ar = str.split(';');
+		    this.override_desktop_list[ar[0]] = ar[1];
+                    //log("Value[" + i + "] = " +  cval.get_string());
+                }
 		this._impl = Gio.DBusExportedObject.wrapJSObject(ExecIface, this);
 		this._impl.export(Gio.DBus.session, '/com/ordissimo/Exec');
 		Gio.DBus.session.own_name('com.ordissimo.Exec',
-			Gio.BusNameOwnerFlags.REPLACE,
-			null, null);
+		            Gio.BusNameOwnerFlags.REPLACE,
+			    null, null);
 	}
 
 	desktop(name) {
@@ -98,7 +110,9 @@ class Exec {
 		if (favoriteapp === null) {
 			return;
 		}
-		let appInfo = Gio.DesktopAppInfo.new(favoriteapp.get_id())
+		let appInfo = Gio.DesktopAppInfo.new(favoriteapp.get_id());
+		log("FavoritApp : " + favoriteapp.get_name());
+		log("AppInfo : " + appInfo.get_name());
 		if (appInfo && appInfo.get_boolean('X-ORDISSIMO-NoWindows')) {
 			try {
 				GLib.spawn_command_line_async(appInfo.get_executable())
@@ -111,9 +125,26 @@ class Exec {
 			if (windowTracker) {
 				let allWindows = global.display.get_tab_list(Meta.TabList.NORMAL, null);
 				if (allWindows) {
-					let cachedWindows = allWindows.filter(w => windowTracker.get_window_app(w).get_name() === favoriteapp.get_name());
+					let myappid = favoriteapp.get_id();
+		                        for(var key in this.override_desktop_list) {
+						if (this.override_desktop_list[key].search(favoriteapp.get_id()) > -1) {
+							myappid = key;
+							break;
+                                                }
+						else if (key == myappid ) {
+							myappid = this.override_desktop_list[key];
+							break;
+						}
+
+					}
+				        allWindows.forEach(function(w) {
+                                               log(">Window Name " + windowTracker.get_window_app(w).get_id() + " === " + myappid);
+                                               log("Window Name " + windowTracker.get_window_app(w).get_id() + " === " + favoriteapp.get_id() + "<");
+					},windowTracker, myappid, favoriteapp);
+					let cachedWindows = allWindows.filter(w => windowTracker.get_window_app(w).get_id() === favoriteapp.get_id());
 					if (!cachedWindows || cachedWindows.length == 0) {
-					        cachedWindows = allWindows.filter(w => windowTracker.get_window_app(w).get_id() === favoriteapp.get_id());
+						log("\tNot Found ...");
+					        cachedWindows = allWindows.filter(w => myappid.search(windowTracker.get_window_app(w).get_id()) > -1);
 					}
 					if (!cachedWindows || cachedWindows.length == 0) {
 						log("\tCreate new Windows ...");
@@ -123,6 +154,8 @@ class Exec {
 						log("\tSwitch to workspace ...");
 						let workspace = cachedWindows[0].get_workspace()
 						if (workspace) {
+		                                        if (appInfo && appInfo.get_boolean('NoDisplay'))
+						               favoriteapp.activate()
 							Main.wm.actionMoveWorkspace(workspace)
 						}
 					}
@@ -493,7 +526,7 @@ TaskBar.prototype = {
 		//Keybindings
 		this.keybindings();
 
-                ExecProxy = new Exec();
+                ExecProxy = new Exec(this.settings);
 	},
 
 	disable: function() {
