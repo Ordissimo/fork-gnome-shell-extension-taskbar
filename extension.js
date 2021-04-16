@@ -137,9 +137,10 @@ class Exec {
 						}
 
 					}
+                                        log(">App Id " + favoriteapp.get_id());
+                                        log(">My App Id " + myappid);
 				        allWindows.forEach(function(w) {
-                                               log(">Window Name " + windowTracker.get_window_app(w).get_id() + " === " + myappid);
-                                               log("Window Name " + windowTracker.get_window_app(w).get_id() + " === " + favoriteapp.get_id() + "<");
+                                               log(">\tWindow Name " + windowTracker.get_window_app(w).get_id());
 					},windowTracker, myappid, favoriteapp);
 					let cachedWindows = allWindows.filter(w => windowTracker.get_window_app(w).get_id() === favoriteapp.get_id());
 					if (!cachedWindows || cachedWindows.length == 0) {
@@ -154,8 +155,16 @@ class Exec {
 						log("\tSwitch to workspace ...");
 						let workspace = cachedWindows[0].get_workspace()
 						if (workspace) {
-		                                        if (appInfo && appInfo.get_boolean('NoDisplay'))
-						               favoriteapp.activate()
+		                                        if (appInfo && appInfo.get_boolean('NoDisplay')) {
+						               log("\t Activate" + favoriteapp.get_id() + " => " + appInfo.get_id());
+					                       try {
+								       favoriteapp.open_new_window(-1);
+								       // GLib.spawn_command_line_async(appInfo.get_executable())
+							       } catch (e) {
+								       log(e)
+							       } 
+						               // favoriteapp.activate()
+							}
 							Main.wm.actionMoveWorkspace(workspace)
 						}
 					}
@@ -163,6 +172,10 @@ class Exec {
 			}
 		}
 	}
+
+        destroy() {
+                this._dbusImpl.unexport();
+        }
 };
 
 
@@ -530,6 +543,8 @@ TaskBar.prototype = {
 	},
 
 	disable: function() {
+                ExecProxy.destroy();
+                ExecProxy = null;
                 //Disconnect Workspace Signals
                 if (this.workspaceSwitch !== null) {
                         global.workspace_manager.disconnect(this.workspaceSwitch);
