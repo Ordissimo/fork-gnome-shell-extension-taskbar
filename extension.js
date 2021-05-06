@@ -46,6 +46,7 @@ const Prefs = Extension.imports.prefs;
 const ShellVersion = imports.misc.config.PACKAGE_VERSION.split(".").map(function(x) {
 	return +x;
 });
+
 const Windows = Extension.imports.windows;
 
 const RESETBOTTOMPANELCOLOR = 'rgba(0,0,0,1)';
@@ -70,113 +71,6 @@ let power = null;
 let calendar = null;
 let user = null;
 let notification = null;
-
-
-let ExecProxy = null;
-
-const ExecIface = '<node> \
-<interface name="com.ordissimo.Exec"> \
-<method name="desktop"> \
-    <arg type="s" direction="in"/> \
-</method> \
-</interface> \
-</node>';
-
-
-class Exec {
-	constructor(settings) {
-		this.settings = settings;
-                var va  = settings.get_value("override-desktop-list");
-		var n1 = va.n_children();
-		this.override_desktop_list = new Array()
-                for (var i = 0; i < n1; i++) {
-                    var cval = va.get_child_value(i);
-		    var str= cval.get_string().toString();
-                    // log("Value[" + i + "] = " +  str);
-		    var ar = str.split(';');
-		    this.override_desktop_list[ar[0]] = ar[1];
-                    //log("Value[" + i + "] = " +  cval.get_string());
-                }
-		this._impl = Gio.DBusExportedObject.wrapJSObject(ExecIface, this);
-		this._impl.export(Gio.DBus.session, '/com/ordissimo/Exec');
-		Gio.DBus.session.own_name('com.ordissimo.Exec',
-		            Gio.BusNameOwnerFlags.REPLACE,
-			    null, null);
-	}
-
-	desktop(name) {
-		let e;
-		let favoriteapp = Shell.AppSystem.get_default().lookup_app(name);
-		if (favoriteapp === null) {
-			return;
-		}
-		let appInfo = Gio.DesktopAppInfo.new(favoriteapp.get_id());
-		log("FavoritApp : " + favoriteapp.get_name());
-		log("AppInfo : " + appInfo.get_name());
-		if (appInfo && appInfo.get_boolean('X-ORDISSIMO-NoWindows')) {
-			try {
-				GLib.spawn_command_line_async(appInfo.get_executable())
-			} catch (e) {
-				log(e)
-			}
-		}
-		else {
-			let windowTracker = Shell.WindowTracker.get_default();
-			if (windowTracker) {
-				let allWindows = global.display.get_tab_list(Meta.TabList.NORMAL, null);
-				if (allWindows) {
-					let myappid = favoriteapp.get_id();
-		                        for(var key in this.override_desktop_list) {
-						if (this.override_desktop_list[key].search(favoriteapp.get_id()) > -1) {
-							myappid = key;
-							break;
-                                                }
-						else if (key == myappid ) {
-							myappid = this.override_desktop_list[key];
-							break;
-						}
-
-					}
-                                        log(">App Id " + favoriteapp.get_id());
-                                        log(">My App Id " + myappid);
-				        allWindows.forEach(function(w) {
-                                               log(">\tWindow Name " + windowTracker.get_window_app(w).get_id());
-					},windowTracker, myappid, favoriteapp);
-					let cachedWindows = allWindows.filter(w => windowTracker.get_window_app(w).get_id() === favoriteapp.get_id());
-					if (!cachedWindows || cachedWindows.length == 0) {
-						log("\tNot Found ...");
-					        cachedWindows = allWindows.filter(w => myappid.search(windowTracker.get_window_app(w).get_id()) > -1);
-					}
-					if (!cachedWindows || cachedWindows.length == 0) {
-						log("\tCreate new Windows ...");
-						favoriteapp.activate()
-					}
-					else {
-						log("\tSwitch to workspace ...");
-						let workspace = cachedWindows[0].get_workspace()
-						if (workspace) {
-		                                        if (appInfo && appInfo.get_boolean('NoDisplay')) {
-						               log("\t Activate" + favoriteapp.get_id() + " => " + appInfo.get_id());
-					                       try {
-								       favoriteapp.open_new_window(-1);
-								       // GLib.spawn_command_line_async(appInfo.get_executable())
-							       } catch (e) {
-								       log(e)
-							       } 
-						               // favoriteapp.activate()
-							}
-							Main.wm.actionMoveWorkspace(workspace)
-						}
-					}
-				}
-			}
-		}
-	}
-
-        destroy() {
-                this._dbusImpl.unexport();
-        }
-};
 
 
 function init(extensionMeta) {
@@ -538,13 +432,9 @@ TaskBar.prototype = {
 
 		//Keybindings
 		this.keybindings();
-
-                ExecProxy = new Exec(this.settings);
 	},
 
 	disable: function() {
-                ExecProxy.destroy();
-                ExecProxy = null;
                 //Disconnect Workspace Signals
                 if (this.workspaceSwitch !== null) {
                         global.workspace_manager.disconnect(this.workspaceSwitch);
@@ -1418,23 +1308,45 @@ TaskBar.prototype = {
                                             '/com/ordissimo/Exec',
                                             'com.ordissimo.Exec',
                                             'desktop',
-                                            new GLib.Variant('(s)', [favoriteapp.get_id()]),
+                                            new GLib.Variant('(sb)', [favoriteapp.get_id(), true]),
                                             null,
                                             Gio.DBusCallFlags.NONE,
                                             -1,
                                             null,
                                             (con, res) => {
-                                                 try {
-                                                    let reply = con.call_finish(res);
-                                                 } catch (e) {
-                                                    logError(e);
-                                                 }
+                                                try {
+                                                     let reply = con.call_finish(res);
+                                                } catch (e) {
+                                                     logError(e);
+                                                }
                                             }
                                         );
                                         this.favoriteAppSelected(i);
 				}, favoriteapp, appInfo, favorites, this, i));
                                 this.boxMainFavorites.add_actor(boxFavorite);
+                                this.conn.call(
+                                    'com.ordissimo.Exec',
+                                    '/com/ordissimo/Exec',
+                                    'com.ordissimo.Exec',
+                                    'desktop',
+                                    new GLib.Variant('(sb)', [favoriteapp.get_id(), false]),
+                                    null,
+                                    Gio.DBusCallFlags.NONE,
+                                    -1,
+                                    null,
+                                    (con, res) => {
+                                         try {
+                                            let reply = con.call_finish(res);
+                                         } catch (e) {
+                                            logError(e);
+                                         }
+                                    }
+                                );
+				// favoriteapp.activate();
+                                // favoriteapp.open_new_window(-1);
+	                        // GLib.spawn_command_line_async(appInfo.get_executable());
                         }
+			log("Switch to Home");
                         Main.wm.actionMoveWorkspace(global.workspace_manager.get_workspace_by_index(0));
                         this.favoriteAppSelected(0);
                 }
