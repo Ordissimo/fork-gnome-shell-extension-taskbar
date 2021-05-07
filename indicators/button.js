@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const { St, Shell } = imports.gi;
+const { St, Shell, Clutter } = imports.gi;
 const Lang = imports.lang;
 const PanelMenu = imports.ui.panelMenu;
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -28,6 +28,7 @@ var CustomButtonXYZ = new Lang.Class({
     Extends: PanelMenu.Button,
 
     _init: function (name) {
+	this.virtualDevice = null;
         this.settings = Convenience.getSettings();
         this.parent(0.5, name);
         this.name = name;
@@ -64,6 +65,22 @@ var CustomButtonXYZ = new Lang.Class({
             return val;
         }
         return NaN
+    },
+    keyPressed: function(keyval) { 
+            if (this.virtualDevice) { 
+                this.virtualDevice.notify_keyval( 
+                       Clutter.get_current_event_time(), 
+                       keyval, 
+                       Clutter.KeyState.PRESSED); 
+            } 
+    }, 
+    keyReleased: function(keyval) { 
+            if (this.virtualDevice) { 
+                this.virtualDevice.notify_keyval( 
+                       Clutter.get_current_event_time(), 
+                       keyval, 
+                       Clutter.KeyState.RELEASED); 
+            } 
     },
     destroy: function () {
         this.parent();

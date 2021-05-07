@@ -71,6 +71,10 @@ let power = null;
 let calendar = null;
 let user = null;
 let notification = null;
+let zoom = null;
+let undo = null;
+let trash = null;
+let helpCenter = null;
 
 
 function init(extensionMeta) {
@@ -325,6 +329,7 @@ TaskBar.prototype = {
 	boxFavoriteEmpty: null,
 	menuManager: null,
 	workspaceSwitch: null,
+	virtualDevice: null,
 
 	init: function(extensionMeta) {
 		this.extensionMeta = extensionMeta;
@@ -338,11 +343,16 @@ TaskBar.prototype = {
 	},
 
 	enable: function() {
+		let seat = Clutter.get_default_backend().get_default_seat();
+
                 Main.panel.statusArea.aggregateMenu.container.hide();
                 Main.panel.statusArea.dateMenu.container.hide();
                 Main.panel._centerBox.remove_child(Main.panel.statusArea.dateMenu.container);
 
 	        this.workspaceSwitch = global.workspace_manager.connect('workspace-switched', Lang.bind(this, this.workspaceSwitched));
+
+	        this.virtualDevice = seat.create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+
                 network = new Extension.imports.indicators.network.NetworkIndicator();
                 // bluetooth = new Extension.imports.indicators.bluetooth.BluetoothIndicator();
                 volume = new Extension.imports.indicators.volume.VolumeIndicator();
@@ -352,6 +362,10 @@ TaskBar.prototype = {
                 // user = new Extension.imports.indicators.system.UserIndicator();
                 // nightlight = new Extension.imports.indicators.nightlight.NightLightIndicator();
                 light = new Extension.imports.indicators.light.LightIndicator();
+                zoom = new Extension.imports.indicators.zoom.ZoomIndicator(this.virtualDevice);
+                undo = new Extension.imports.indicators.undo.UndoIndicator(this.virtualDevice);
+                trash = new Extension.imports.indicators.trash.TrashIndicator(this.virtualDevice);
+                helpCenter = new Extension.imports.indicators.helpcenter.HelpCenterIndicator();
 	
 		this.settings = Lib.getSettings();
 
@@ -432,9 +446,11 @@ TaskBar.prototype = {
 
 		//Keybindings
 		this.keybindings();
+
 	},
 
 	disable: function() {
+		this.virtualDevice.run_dispose();
                 //Disconnect Workspace Signals
                 if (this.workspaceSwitch !== null) {
                         global.workspace_manager.disconnect(this.workspaceSwitch);
@@ -452,6 +468,14 @@ TaskBar.prototype = {
 		}
 
 		if (this.settings.get_boolean("display-aggregate")) {
+                        if (helpCenter)
+                             helpCenter.destroy();
+                        if (trash)
+                             trash.destroy();
+                        if (undo)
+                             undo.destroy();
+                        if (zoom)
+                             zoom.destroy();
                         if (light)
                              light.destroy();
 /*
@@ -1357,7 +1381,11 @@ TaskBar.prototype = {
 		if (this.settings.get_boolean("display-aggregate")) {
                        
                         // this.addToStatusArea(calendar.name, calendar, 0, this.boxMainAggregate);
+                        this.addToStatusArea(helpCenter.name, helpCenter, 0, this.boxMainAggregate);
                         this.addToStatusArea(power.name, power, 0, this.boxMainAggregate);
+                        this.addToStatusArea(trash.name, trash, 0, this.boxMainAggregate);
+                        this.addToStatusArea(undo.name, undo, 0, this.boxMainAggregate);
+                        this.addToStatusArea(zoom.name, zoom, 0, this.boxMainAggregate);
                         this.addToStatusArea(light.name, light, 0, this.boxMainAggregate);
                         this.addToStatusArea(volume.name, volume, 0, this.boxMainAggregate);
                         this.addToStatusArea(network.name, network, 0, this.boxMainAggregate);
