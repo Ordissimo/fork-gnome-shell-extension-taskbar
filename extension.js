@@ -1331,8 +1331,8 @@ TaskBar.prototype = {
                                             'com.ordissimo.Exec',
                                             '/com/ordissimo/Exec',
                                             'com.ordissimo.Exec',
-                                            'desktop',
-                                            new GLib.Variant('(sb)', [favoriteapp.get_id(), true]),
+                                            'switch',
+                                            new GLib.Variant('(s)', [favoriteapp.get_id()]),
                                             null,
                                             Gio.DBusCallFlags.NONE,
                                             -1,
@@ -1348,27 +1348,6 @@ TaskBar.prototype = {
                                         this.favoriteAppSelected(i);
 				}, favoriteapp, appInfo, favorites, this, i));
                                 this.boxMainFavorites.add_actor(boxFavorite);
-                                this.conn.call(
-                                    'com.ordissimo.Exec',
-                                    '/com/ordissimo/Exec',
-                                    'com.ordissimo.Exec',
-                                    'desktop',
-                                    new GLib.Variant('(sb)', [favoriteapp.get_id(), false]),
-                                    null,
-                                    Gio.DBusCallFlags.NONE,
-                                    -1,
-                                    null,
-                                    (con, res) => {
-                                         try {
-                                            let reply = con.call_finish(res);
-                                         } catch (e) {
-                                            logError(e);
-                                         }
-                                    }
-                                );
-				// favoriteapp.activate();
-                                // favoriteapp.open_new_window(-1);
-	                        // GLib.spawn_command_line_async(appInfo.get_executable());
                         }
 			log("Switch to Home");
                         Main.wm.actionMoveWorkspace(global.workspace_manager.get_workspace_by_index(0));
@@ -1832,7 +1811,7 @@ TaskBar.prototype = {
 			if (this.settings.get_boolean("display-favorites"))
 				this.boxMainFavorites.set_style(this.separatorFavorites);
 		}
-	        //if (this.settings.get_boolean("display-aggregate"))
+	        if (this.settings.get_boolean("display-aggregate"))
 		        this.boxMainAggregate.set_style(this.separatorAggregate);
 	},
 
