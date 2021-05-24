@@ -97,32 +97,32 @@
             <description/>
         </key>
         <key name="display-tasks" type="b">
-            <default>true</default>
+            <default>false</default>
             <summary>Display Tasks</summary>
             <description/>
         </key>
         <key name="display-desktop-button" type="b">
-            <default>true</default>
+            <default>false</default>
             <summary>Display Desktop Button</summary>
             <description/>
         </key>
         <key name="display-workspace-button" type="b">
-            <default>true</default>
+            <default>false</default>
             <summary>Display Workspace Button</summary>
             <description/>
         </key>
         <key name="display-showapps-button" type="b">
-            <default>true</default>
+            <default>false</default>
             <summary>Display Show Applications Button</summary>
             <description/>
         </key>
         <key name="display-favorites" type="b">
-            <default>false</default>
+            <default>true</default>
             <summary>Display Favorites</summary>
             <description/>
         </key>
         <key name="display-aggregate" type="b">
-            <default>false</default>
+            <default>true</default>
             <summary>Display Aggregate</summary>
             <description/>
         </key>
@@ -152,12 +152,12 @@
             <description/>
         </key>
         <key name="top-panel" type="b">
-            <default>true</default>
+            <default>false</default>
             <summary>Top Panel</summary>
             <description/>
         </key>
         <key name="bottom-panel" type="b">
-            <default>false</default>
+            <default>true</default>
             <summary>Bottom Panel</summary>
             <description/>
         </key>
@@ -187,7 +187,7 @@
         </key>
         <key name="panel-size-bottom" type="i">
             <range min="1" max="96"/>
-            <default>27</default>
+            <default>80</default>
             <summary>Bottom Panel Size</summary>
             <description/>
         </key>
@@ -382,7 +382,7 @@
             <description/>
         </key>
         <key name="top-panel-background-color" type="s">
-            <default>'unset'</default>
+            <default>'#5a6d7b'</default>
             <summary>Top Panel Background Color</summary>
             <description/>
         </key>
@@ -397,12 +397,12 @@
             <description/>
         </key>
         <key name="bottom-panel-background-color" type="s">
-            <default>'#5a6d7bff'</default>
+            <default>'#5a6d7b'</default>
             <summary>Bottom Panel Background Color</summary>
             <description/>
         </key>
         <key name="bottom-panel-original-background-color" type="s">
-            <default>'rgba(35,43,48,1)'</default>
+            <default>'unset'</default>
             <summary>Bottom Panel Background Color</summary>
             <description/>
         </key>
